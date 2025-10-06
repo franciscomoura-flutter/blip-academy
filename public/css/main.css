@@ -12,8 +12,11 @@
 }
 
 body {
+    display: flex;
+    align-items: flex-start;
+    gap: 25px;
     font-family: "Poppins", "Segoe UI", sans-serif;
-    min-height: 100vh;
+    height: 100vh;
     color: rgb(var(--white));
     background: radial-gradient(62.74% 59.4% at 81.88% -2.15%, rgb(var(--primary)) 0%, rgb(var(--black)) 100%);
 }
@@ -39,4 +42,107 @@ body::before {
 a {
     color: inherit;
     text-decoration: none;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 0 0 300px;
+    margin-top: 25px;
+    margin-left: 25px;
+    height: calc(100% - 50px);
+    border: 1px solid rgb(var(--gray));
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 20px;
+    border-bottom: 1px solid rgb(var(--gray));
+}
+
+.sidebar-section:last-child {
+    margin-top: auto;
+    border-top: 1px solid rgb(var(--gray));
+    border-bottom: none;
+}
+
+.sidebar-section .sidebar-title {
+    color: rgb(var(--gray));
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 140%;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.sidebar-link {
+    display: flex;
+    align-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: fit-content;
+}
+
+.sidebar-link:hover {
+    cursor: pointer;
+}
+
+.sidebar-link:hover .sidebar-link-icon {
+    background-color: rgb(var(--primary));
+    filter: brightness(1.2);
+}
+
+.sidebar-link .sidebar-link-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' fill-rule='evenodd' d='M5.5 4H12v6.5h-1V5.707l-6.146 6.147l-.708-.708L10.293 5H5.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-color: rgb(var(--white));
+    -webkit-mask-image: var(--svg);
+    mask-image: var(--svg);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+}
+
+.sidebar-link .sidebar-link-text {
+    color: rgb(var(--white));
+    font-size: 14px;
+    font-style: normal;
+}
+
+.sidebar-link .sidebar-link-open {
+    display: inline-block;
+    margin-left: auto;
+    width: 20px;
+    height: 20px;
+    --svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' fill-rule='evenodd' d='M5.5 4H12v6.5h-1V5.707l-6.146 6.147l-.708-.708L10.293 5H5.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-color: rgb(var(--gray));
+    -webkit-mask-image: var(--svg);
+    mask-image: var(--svg);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+}
+
+.main {
+    padding-top: 25px;
+    padding-right: 25px;
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-color: rgba(var(--white), 0.8) transparent;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
 }
