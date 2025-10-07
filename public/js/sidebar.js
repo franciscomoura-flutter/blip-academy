@@ -45,7 +45,7 @@ export function createSidebar() {
   const sidebarHTML = `
     <div class="sidebar">
       <div class="sidebar-section">
-        <a href="/"><img src="assets/logo.svg" alt="Logo" class="sidebar-logo"></a>
+        <a href="/public/index.html"><img src="assets/logo.svg" alt="Logo" class="sidebar-logo"></a>
       </div>
       ${sectionsHTML}
     </div>
