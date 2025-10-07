@@ -1,72 +1,78 @@
 export function createSidebar() {
+  const sidebarSections = {
+    'Start': {
+      'Home': { url: '/public/index.html', external: false, icon: 'home' },
+      'About Us': { url: '', external: false, icon: 'about' }
+    },
+    'Learn': {
+      'Onboarding': { url: '', external: false, icon: 'onboarding' },
+      'Human Skills': { url: '', external: false, icon: 'human' },
+      'Leadership': { url: '', external: false, icon: 'leadership' },
+      'Tech': { url: '/tech', external: false, icon: 'tech' },
+      'Sports Betting': { url: '', external: false, icon: 'sports' }
+    },
+    'Access': {
+      'Compliance': { url: 'https://wd3.myworkday.com/flutterbe/learning/mylearning', external: true, icon: 'compliance' },
+      'Self-Development Fund': { url: 'https://default7acc61c5e4a549d2a52a3ce24c7263.71.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/1b1e168c7a2f4590ac6876cc96f60bd7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=BGqclbIP6DcpQPAx5G8PMBPEUpGrdicdPC7ljrn3Gss', external: true, icon: 'sdf' },
+      'Tools & Partnerships': { url: '', external: false, icon: 'tools' }
+    },
+    'Feedback': {
+      'Help us grow': { url: '', external: true, icon: 'feedback' }
+    }
+  };
+
+  const sectionsHTML = Object.entries(sidebarSections).map(([sectionTitle, links]) => {
+    const linksHTML = Object.entries(links).map(([text, linkData]) => {
+      const iconClass = `icon-${linkData.icon}`;
+
+      return `
+        <div class="sidebar-link" data-link="${text}">
+          <div class="sidebar-link-icon ${iconClass}"></div>
+          <span class="sidebar-link-text">${text}</span>
+          ${linkData.external ? '<div class="sidebar-link-open"></div>' : ''}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="sidebar-section">
+        <span class="sidebar-title">${sectionTitle}</span>
+        ${linksHTML}
+      </div>
+    `;
+  }).join('');
+
   const sidebarHTML = `
     <div class="sidebar">
       <div class="sidebar-section">
         <a href="/"><img src="assets/logo.svg" alt="Logo" class="sidebar-logo"></a>
       </div>
-      <div class="sidebar-section">
-        <span class="sidebar-title">Start</span>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-home"></div>
-            <span class="sidebar-link-text">Home</span>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-about"></div>
-            <span class="sidebar-link-text">About Us</span>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <span class="sidebar-title">Learn</span>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-onboarding"></div>
-            <span class="sidebar-link-text">Onboarding</span>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-human"></div>
-            <span class="sidebar-link-text">Human Skills</span>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-leadership"></div>
-            <span class="sidebar-link-text">Leadership</span>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-tech"></div>
-            <span class="sidebar-link-text">Tech</span>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-sports"></div>
-            <span class="sidebar-link-text">Sports Betting</span>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <span class="sidebar-title">Access</span>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-compliance"></div>
-            <span class="sidebar-link-text">Compliance</span>
-            <div class="sidebar-link-open"></div>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-sdf"></div>
-            <span class="sidebar-link-text">Self-Development Fund</span>
-            <div class="sidebar-link-open"></div>
-        </div>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-tools"></div>
-            <span class="sidebar-link-text">Tools & Partnerships</span>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <span class="sidebar-title">Feedback</span>
-        <div class="sidebar-link">
-            <div class="sidebar-link-icon icon-feedback"></div>
-            <span class="sidebar-link-text">Help us grow</span>
-            <div class="sidebar-link-open"></div>
-        </div>
-      </div>
+      ${sectionsHTML}
     </div>
   `;
+
+  const allLinks = {};
+  Object.values(sidebarSections).forEach(section => {
+    Object.assign(allLinks, section);
+  });
 
   const sidebarDiv = document.createElement('div');
   sidebarDiv.innerHTML = sidebarHTML;
   document.body.insertBefore(sidebarDiv.firstElementChild, document.body.firstChild);
+
+  const sidebarLinkElements = document.querySelectorAll('.sidebar-link[data-link]');
+  sidebarLinkElements.forEach(element => {
+    element.addEventListener('click', function () {
+      const linkKey = this.getAttribute('data-link');
+      const linkData = allLinks[linkKey];
+
+      if (linkData && linkData.url) {
+        if (linkData.external) {
+          window.open(linkData.url, '_blank');
+        } else {
+          window.location.href = linkData.url;
+        }
+      }
+    });
+  });
 }
