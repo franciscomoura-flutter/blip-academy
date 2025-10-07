@@ -129,7 +129,7 @@ h2 {
 
 .sidebar-link:hover .sidebar-link-icon {
     background-color: rgb(var(--primary));
-    filter: brightness(1.2);
+    filter: brightness(1.4);
 }
 
 .sidebar-link:hover .sidebar-link-open {
@@ -145,6 +145,7 @@ h2 {
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
+    transition: all 0.4s ease;
 }
 
 .sidebar-link-icon.icon-home {
@@ -232,6 +233,7 @@ h2 {
     mask-repeat: no-repeat;
     -webkit-mask-size: 100% 100%;
     mask-size: 100% 100%;
+    transition: all 0.4s ease;
 }
 
 .main {
