@@ -5,7 +5,7 @@ export function createSidebar() {
       'About Us': { url: '', external: false, icon: 'about' }
     },
     'Learn': {
-      'Onboarding': { url: '', external: false, icon: 'onboarding' },
+      'Onboarding': { url: 'https://flutter.interactgo.com/Interact/Pages/Content/Document.aspx?id=5990', external: true, icon: 'onboarding' },
       'Human Skills': { url: '', external: false, icon: 'human' },
       'Leadership': { url: '', external: false, icon: 'leadership' },
       'Tech': { url: '/tech', external: false, icon: 'tech' },
@@ -17,7 +17,7 @@ export function createSidebar() {
       'Tools & Partnerships': { url: '', external: false, icon: 'tools' }
     },
     'Feedback': {
-      'Help us grow': { url: '', external: true, icon: 'feedback' }
+      'Help us grow': { url: 'https://outlook.office.com/mail/deeplink/compose?to=talent.development@blip.pt', external: true, icon: 'feedback' }
     }
   };
 
