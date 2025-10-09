@@ -1,32 +1,32 @@
 // Card data configuration
 const cardData = [
     {
-        image: 'assets/homecard_onboarding.jpg',
+        image: 'assets/homecard_onboarding.jpeg',
         title: 'Onboarding',
         description: 'Every journey begins with a first step. Here\'s everything you need to enjoy, or support, an awesome onboarding experience.'
     },
     {
-        image: 'assets/homecard_humanskills.jpg',
+        image: 'assets/homecard_humanskills.jpeg',
         title: 'Human Skills',
         description: 'Every human skill you develop creates waves of positive change that extend far beyond your immediate sphere.'
     },
     {
-        image: 'assets/homecard_leadership.jpg',
+        image: 'assets/homecard_leadership.jpeg',
         title: 'Leadership',
         description: 'When you develop your leadership skills, you don\'t just change your own trajectory – you influence everyone around you.'
     },
     {
-        image: 'assets/homecard_tech.jpg',
+        image: 'assets/homecard_tech.jpeg',
         title: 'Tech',
         description: 'In the digital age, technical skills are superpowers that amplify your ability to create, innovate, and solve problems at scale. '
     },
     {
-        image: 'assets/homecard_sportsbetting.png',
+        image: 'assets/homecard_sportsbetting.jpeg',
         title: 'Sports Betting',
         description: 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Dolor sit amet consectetur adipiscing elit quisque faucibus.'
     },
     {
-        image: 'assets/homecard_toolspartnerships.png',
+        image: 'assets/homecard_toolspartnerships.jpeg',
         title: 'Tools & Partnerships',
         description: 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Dolor sit amet consectetur adipiscing elit quisque faucibus.'
     }
