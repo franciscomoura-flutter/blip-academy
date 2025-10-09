@@ -13,7 +13,7 @@ export function createSidebar() {
     },
     'Access': {
       'Compliance': { url: 'https://wd3.myworkday.com/flutterbe/learning/mylearning', external: true, icon: 'compliance' },
-      'Self-Development Fund': { url: 'https://default7acc61c5e4a549d2a52a3ce24c7263.71.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/1b1e168c7a2f4590ac6876cc96f60bd7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=BGqclbIP6DcpQPAx5G8PMBPEUpGrdicdPC7ljrn3Gss', external: true, icon: 'sdf' },
+      'Self-Development Fund': { url: 'https://www.therewardhub.com/flutterportugal/flex/shop/edit/_developmentcustomer#306dbf58-a947-474c-b311-948ff4a6dcc8', external: true, icon: 'sdf' },
       'Tools & Partnerships': { url: '', external: false, icon: 'tools' }
     },
     'Feedback': {
