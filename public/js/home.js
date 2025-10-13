@@ -1,59 +1,15 @@
-// Card data configuration
-const cardData = [
-  {
-    image: 'assets/homecard_onboarding.jpeg',
-    title: 'Onboarding',
-    description: 'Every journey begins with a first step. Here\'s everything you need to enjoy, or support, an awesome onboarding experience.',
-    url: 'https://flutter.interactgo.com/Interact/Pages/Content/Document.aspx?id=5990',
-    external: true
-  },
-  {
-    image: 'assets/homecard_humanskills.jpeg',
-    title: 'Human Skills',
-    description: 'Every human skill you develop creates waves of positive change that extend far beyond your immediate sphere.',
-    url: '',
-    external: false
-  },
-  {
-    image: 'assets/homecard_leadership.jpeg',
-    title: 'Leadership',
-    description: 'When you develop your leadership skills, you don\'t just change your own trajectory – you influence everyone around you.',
-    url: '',
-    external: false
-  },
-  {
-    image: 'assets/homecard_tech.jpeg',
-    title: 'Tech',
-    description: 'In the digital age, technical skills are superpowers that amplify your ability to create, innovate, and solve problems at scale.',
-    url: '',
-    external: false
-  },
-  {
-    image: 'assets/homecard_sportsbetting.jpeg',
-    title: 'Sports Betting',
-    description: 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Dolor sit amet consectetur adipiscing elit quisque faucibus.',
-    url: '',
-    external: false
-  },
-  {
-    image: 'assets/homecard_toolspartnerships.jpeg',
-    title: 'Tools & Partnerships',
-    description: 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Dolor sit amet consectetur adipiscing elit quisque faucibus.',
-    url: '',
-    external: false
-  }
-];
+import { getCardSections } from './firebase.js';
 
 function createCard(card) {
   return `
     <div class="cta-card" data-url="${card.url}" data-external="${card.external}">
       <div class="cta-card-section">
         <div class="cta-card-image">
-          <img src="${card.image}" alt="${card.title}" />
+          <img src="${card.image}" alt="${card.name}" />
         </div>
       </div>
       <div class="cta-card-section">
-        <h3 class="cta-card-title">${card.title}</h3>
+        <h3 class="cta-card-title">${card.name}</h3>
         <span class="cta-card-description">${card.description}</span>
       </div>
       <div class="cta-card-section">
@@ -69,7 +25,7 @@ function createCard(card) {
 }
 
 // Function to render all cards
-function renderCards() {
+async function renderCards() {
   const cardsContainer = document.querySelector('.cta-cards');
 
   if (!cardsContainer) {
@@ -77,32 +33,48 @@ function renderCards() {
     return;
   }
 
-  // Generate HTML for all cards
-  const cardsHTML = cardData.map(card => createCard(card)).join('');
+  try {
+    // Show loading state
+    cardsContainer.innerHTML = '<p>Loading cards...</p>';
 
-  // Insert cards into container
-  cardsContainer.innerHTML = cardsHTML;
+    // Get card data from Firebase
+    const cardData = await getCardSections();
 
-  // Add click event listeners to all cards
-  const cardElements = document.querySelectorAll('.cta-card[data-url]');
-  cardElements.forEach(cardElement => {
-    cardElement.addEventListener('click', function () {
-      const url = this.getAttribute('data-url');
-      const isExternal = this.getAttribute('data-external') === 'true';
+    if (cardData.length === 0) {
+      cardsContainer.innerHTML = '<p>No cards available at the moment.</p>';
+      return;
+    }
 
-      if (url) {
-        if (isExternal) {
-          window.open(url, '_blank');
-        } else {
-          window.location.href = url;
+    // Generate HTML for all cards
+    const cardsHTML = cardData.map(card => createCard(card)).join('');
+
+    // Insert cards into container
+    cardsContainer.innerHTML = cardsHTML;
+
+    // Add click event listeners to all cards
+    const cardElements = document.querySelectorAll('.cta-card[data-url]');
+    cardElements.forEach(cardElement => {
+      cardElement.addEventListener('click', function () {
+        const url = this.getAttribute('data-url');
+        const isExternal = this.getAttribute('data-external') === 'true';
+
+        if (url) {
+          if (isExternal) {
+            window.open(url, '_blank');
+          } else {
+            window.location.href = url;
+          }
         }
-      }
+      });
     });
-  });
+  } catch (error) {
+    console.error('Error rendering cards:', error);
+    cardsContainer.innerHTML = '<p>Error loading cards. Please try again later.</p>';
+  }
 }
 
 // Initialize cards when DOM is loaded
 document.addEventListener('DOMContentLoaded', renderCards);
 
 // Export for potential use in other modules
-export { cardData, createCard, renderCards };
+export { createCard, renderCards };
