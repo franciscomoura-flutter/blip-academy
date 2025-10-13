@@ -1,10 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read access to sections collection for all users
-    match /sections/{document} {
-      allow read: if true;
-      allow write: if false;
+    // Allow full access for admin operations
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

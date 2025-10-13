@@ -1,7 +1,7 @@
 import { createSidebar } from './sidebar.js';
 
 function isInIframe() {
-    const bypassDomains = ['localhost', '127.0.0.1', 'franciscomoura-flutter.github.io'];
+    const bypassDomains = ['localhost', '127.0.0.1'];
     if (bypassDomains.some(domain => window.location.hostname.includes(domain))) {
         return true;
     }

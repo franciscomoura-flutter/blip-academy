@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // Your Firebase config
 const firebaseConfig = {
@@ -16,12 +16,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Define sidebar section order
+const sidebarSectionOrder = ['Start', 'Learn', 'Access', 'Feedback'];
+
 // Function to get all sections
 export async function getAllSections() {
     try {
-        const sectionsRef = collection(db, 'sections');
-        const q = query(sectionsRef, orderBy('name'));
-        const querySnapshot = await getDocs(q);
+        const sectionsRef = collection(db, 'Sections');
+        const querySnapshot = await getDocs(sectionsRef);
 
         const sections = [];
         querySnapshot.forEach((doc) => {
@@ -38,11 +40,11 @@ export async function getAllSections() {
     }
 }
 
-// Function to get sections for cards (where card = true)
+// Function to get sections for cards (where card = true) ordered by cardOrder
 export async function getCardSections() {
     try {
-        const sectionsRef = collection(db, 'sections');
-        const q = query(sectionsRef, where('card', '==', true), orderBy('name'));
+        const sectionsRef = collection(db, 'Sections');
+        const q = query(sectionsRef, where('card', '==', true));
         const querySnapshot = await getDocs(q);
 
         const sections = [];
@@ -53,19 +55,32 @@ export async function getCardSections() {
             });
         });
 
-        return sections;
+        // Sort by cardOrder (ascending), fallback to name if cardOrder is missing
+        return sections.sort((a, b) => {
+            const orderA = a.cardOrder || 999;
+            const orderB = b.cardOrder || 999;
+
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+
+            // If cardOrder is the same, sort by name
+            return (a.name || '').localeCompare(b.name || '');
+        });
     } catch (error) {
         console.error('Error getting card sections:', error);
         throw error;
     }
 }
 
-// Function to get sections grouped by sidebar section
+// Function to get sections grouped by sidebar section with custom ordering
 export async function getSidebarSections() {
     try {
         const sections = await getAllSections();
 
         const sidebarSections = {};
+
+        // Group sections by sidebarSection
         sections.forEach(section => {
             if (!sidebarSections[section.sidebarSection]) {
                 sidebarSections[section.sidebarSection] = {};
@@ -77,7 +92,23 @@ export async function getSidebarSections() {
             };
         });
 
-        return sidebarSections;
+        // Create ordered result based on predefined section order
+        const orderedSidebarSections = {};
+
+        sidebarSectionOrder.forEach(sectionName => {
+            if (sidebarSections[sectionName]) {
+                orderedSidebarSections[sectionName] = sidebarSections[sectionName];
+            }
+        });
+
+        // Add any sections that weren't in the predefined order (as fallback)
+        Object.keys(sidebarSections).forEach(sectionName => {
+            if (!orderedSidebarSections[sectionName]) {
+                orderedSidebarSections[sectionName] = sidebarSections[sectionName];
+            }
+        });
+
+        return orderedSidebarSections;
     } catch (error) {
         console.error('Error getting sidebar sections:', error);
         throw error;
