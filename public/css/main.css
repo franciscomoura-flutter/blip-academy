@@ -264,6 +264,29 @@ h3 {
     transition: all 0.4s ease;
 }
 
+.sidebar-link.disabled .sidebar-link-text {
+    cursor: not-allowed;
+    color: rgb(var(--gray));
+}
+
+.sidebar-link.disabled .sidebar-link-icon {
+    cursor: not-allowed;
+    background-color: rgb(var(--gray));
+    filter: brightness(1);
+}
+
+.sidebar-link-coming-soon {
+    cursor: not-allowed;
+    margin-left: auto;
+    color: rgb(var(--gray));
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 140%;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 .main {
     padding-top: 25px;
     padding-right: 25px;

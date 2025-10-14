@@ -94,13 +94,16 @@ async function renderCards() {
         // Get card data from Firebase
         const cardData = await getCardSections();
 
-        if (cardData.length === 0) {
+        // Filter out cards without URLs
+        const activeCards = cardData.filter(card => card.url);
+
+        if (activeCards.length === 0) {
             cardsContainer.innerHTML = '<p>No cards available at the moment.</p>';
             return;
         }
 
-        // Generate HTML for all cards
-        const cardsHTML = cardData.map(card => createCard(card)).join('');
+        // Generate HTML for cards with URLs only
+        const cardsHTML = activeCards.map(card => createCard(card)).join('');
 
         // Insert cards into container
         cardsContainer.innerHTML = cardsHTML;

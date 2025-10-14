@@ -1,8 +1,12 @@
-import { getCardSections } from './firebase.js';
+import { getCardSections, getAllSections } from './firebase.js';
 
 function createCard(card) {
+  const isDisabled = !card.url;
+  const disabledClass = isDisabled ? ' disabled' : '';
+  const actionText = isDisabled ? 'Coming Soon' : 'Learn more';
+
   return `
-    <div class="cta-card" data-url="${card.url}" data-external="${card.external}">
+    <div class="cta-card${disabledClass}" data-url="${card.url || ''}" data-external="${card.external}">
       <div class="cta-card-section">
         <div class="cta-card-image">
           <img src="${card.image}" alt="${card.name}" />
@@ -14,7 +18,7 @@ function createCard(card) {
       </div>
       <div class="cta-card-section">
         <div class="cta-card-action">
-          <span class="cta-card-action-text">Learn more</span>
+          <span class="cta-card-action-text">${actionText}</span>
           <div class="cta-card-action-btn">
             <div class="cta-card-action-icon"></div>
           </div>
@@ -22,6 +26,41 @@ function createCard(card) {
       </div>
     </div>
   `;
+}
+
+// Function to setup hero button click event
+async function setupHeroButton() {
+  const heroBtn = document.querySelector('.hero-btn');
+
+  if (!heroBtn) {
+    console.error('Hero button not found');
+    return;
+  }
+
+  try {
+    // Get all sections from Firebase
+    const sections = await getAllSections();
+
+    // Find the about section with the specific ID
+    const aboutSection = sections.find(section => section.id === 'RNwyBpqx6kzKv48X0K8O');
+
+    if (aboutSection && aboutSection.url) {
+      heroBtn.addEventListener('click', function () {
+        if (aboutSection.external) {
+          window.open(aboutSection.url, '_blank');
+        } else {
+          window.location.href = aboutSection.url;
+        }
+      });
+
+      // Add cursor pointer style
+      heroBtn.style.cursor = 'pointer';
+    } else {
+      console.warn('About section URL not found');
+    }
+  } catch (error) {
+    console.error('Error setting up hero button:', error);
+  }
 }
 
 // Function to render all cards
@@ -45,14 +84,21 @@ async function renderCards() {
       return;
     }
 
+    // Separate cards with and without URLs
+    const activeCards = cardData.filter(card => card.url);
+    const disabledCards = cardData.filter(card => !card.url);
+
+    // Combine active cards first, then disabled cards
+    const allCards = [...activeCards, ...disabledCards];
+
     // Generate HTML for all cards
-    const cardsHTML = cardData.map(card => createCard(card)).join('');
+    const cardsHTML = allCards.map(card => createCard(card)).join('');
 
     // Insert cards into container
     cardsContainer.innerHTML = cardsHTML;
 
-    // Add click event listeners to all cards
-    const cardElements = document.querySelectorAll('.cta-card[data-url]');
+    // Add click event listeners only to active cards (those with URLs)
+    const cardElements = document.querySelectorAll('.cta-card[data-url]:not(.disabled)');
     cardElements.forEach(cardElement => {
       cardElement.addEventListener('click', function () {
         const url = this.getAttribute('data-url');
@@ -73,8 +119,14 @@ async function renderCards() {
   }
 }
 
-// Initialize cards when DOM is loaded
-document.addEventListener('DOMContentLoaded', renderCards);
+// Initialize page when DOM is loaded
+async function initializePage() {
+  await setupHeroButton();
+  await renderCards();
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializePage);
 
 // Export for potential use in other modules
-export { createCard, renderCards };
+export { createCard, renderCards, setupHeroButton };

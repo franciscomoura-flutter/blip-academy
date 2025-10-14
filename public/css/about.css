@@ -99,7 +99,7 @@ body {
     height: fit-content;
     align-items: flex-start;
     justify-content: center;
-    padding: 0 0 50px 5%;
+    padding: 0 0 25px 5%;
 }
 
 .continue-learning-header {
@@ -169,10 +169,15 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     padding-right: calc(100% - 550px + 25px);
-    padding-bottom: 1rem;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.cta-cards::-webkit-scrollbar {
+    display: none;
 }
 
 .cta-cards::-webkit-scrollbar {

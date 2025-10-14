@@ -254,3 +254,38 @@
 .cta-card:hover .cta-card-action-icon {
     background-color: rgb(var(--white));
 }
+
+.cta-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.cta-card.disabled .cta-card-image {
+    filter: grayscale(100%);
+}
+
+.cta-card.disabled .cta-card-action-text {
+    text-transform: uppercase;
+}
+
+.cta-card.disabled:hover {
+    cursor: not-allowed;
+}
+
+.cta-card.disabled:hover .cta-card-action-text,
+.cta-card.disabled:hover .cta-card-action-btn {
+    color: rgb(var(--gray));
+    background-color: transparent;
+}
+
+.cta-card.disabled:hover .cta-card-action-text::before {
+    transform: scaleX(0);
+}
+
+.cta-card.disabled:hover .cta-card-action-btn::before {
+    opacity: 0;
+}
+
+.cta-card.disabled:hover .cta-card-action-icon {
+    background-color: rgb(var(--gray));
+}

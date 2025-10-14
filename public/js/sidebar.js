@@ -11,14 +11,32 @@ export async function createSidebar() {
     }
 
     const sectionsHTML = Object.entries(sidebarSections).map(([sectionTitle, links]) => {
-      const linksHTML = Object.entries(links).map(([text, linkData]) => {
+      // Separate links with and without URLs
+      const activeLinks = [];
+      const disabledLinks = [];
+
+      Object.entries(links).forEach(([text, linkData]) => {
+        if (linkData.url) {
+          activeLinks.push([text, linkData]);
+        } else {
+          disabledLinks.push([text, linkData]);
+        }
+      });
+
+      // Combine active links first, then disabled links
+      const allLinks = [...activeLinks, ...disabledLinks];
+
+      const linksHTML = allLinks.map(([text, linkData]) => {
         const iconClass = `icon-${linkData.icon}`;
+        const isDisabled = !linkData.url;
+        const disabledClass = isDisabled ? ' disabled' : '';
 
         return `
-          <div class="sidebar-link" data-link="${text}">
+          <div class="sidebar-link${disabledClass}" data-link="${text}">
             <div class="sidebar-link-icon ${iconClass}"></div>
             <span class="sidebar-link-text">${text}</span>
-            ${linkData.external ? '<div class="sidebar-link-open"></div>' : ''}
+            ${linkData.external && !isDisabled ? '<div class="sidebar-link-open"></div>' : ''}
+            ${isDisabled ? '<div class="sidebar-link-coming-soon">Coming Soon</div>' : ''}
           </div>
         `;
       }).join('');
@@ -49,7 +67,7 @@ export async function createSidebar() {
     sidebarDiv.innerHTML = sidebarHTML;
     document.body.insertBefore(sidebarDiv.firstElementChild, document.body.firstChild);
 
-    const sidebarLinkElements = document.querySelectorAll('.sidebar-link[data-link]');
+    const sidebarLinkElements = document.querySelectorAll('.sidebar-link[data-link]:not(.disabled)');
     sidebarLinkElements.forEach(element => {
       element.addEventListener('click', function () {
         const linkKey = this.getAttribute('data-link');
