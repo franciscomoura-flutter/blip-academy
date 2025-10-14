@@ -24,6 +24,61 @@ function createCard(card) {
   `;
 }
 
+function setupScrollButtons() {
+    const cardsContainer = document.querySelector('.cta-cards');
+    const prevBtn = document.querySelector('.btn-previous');
+    const nextBtn = document.querySelector('.btn-next');
+
+    if (!cardsContainer || !prevBtn || !nextBtn) {
+        console.error('Scroll buttons or cards container not found');
+        return;
+    }
+
+    const cardWidth = 550; // Width of each card
+    const gap = 25; // Gap between cards
+    const scrollDistance = cardWidth + gap; // Total distance to scroll per card
+
+    function scrollToNext() {
+        const maxScrollLeft = cardsContainer.scrollWidth - cardsContainer.clientWidth;
+        const currentScroll = cardsContainer.scrollLeft;
+        const newScrollPosition = Math.min(currentScroll + scrollDistance, maxScrollLeft);
+
+        cardsContainer.scrollTo({
+            left: newScrollPosition,
+            behavior: 'smooth'
+        });
+    }
+
+    function scrollToPrevious() {
+        const currentScroll = cardsContainer.scrollLeft;
+        const newScrollPosition = Math.max(currentScroll - scrollDistance, 0);
+
+        cardsContainer.scrollTo({
+            left: newScrollPosition,
+            behavior: 'smooth'
+        });
+    }
+
+    // Previous button (scroll left)
+    prevBtn.addEventListener('click', scrollToPrevious);
+
+    // Next button (scroll right)
+    nextBtn.addEventListener('click', scrollToNext);
+
+    // Touch events for mobile
+    prevBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+    });
+
+    nextBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+    });
+
+    // Prevent text selection
+    prevBtn.addEventListener('selectstart', (e) => e.preventDefault());
+    nextBtn.addEventListener('selectstart', (e) => e.preventDefault());
+}
+
 async function renderCards() {
     const cardsContainer = document.querySelector('.cta-cards');
 
@@ -66,6 +121,9 @@ async function renderCards() {
                 }
             });
         });
+
+        // Setup scroll buttons after cards are rendered
+        setupScrollButtons();
     } catch (error) {
         console.error('Error rendering cards:', error);
         cardsContainer.innerHTML = '<p>Error loading cards. Please try again later.</p>';
