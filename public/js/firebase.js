@@ -114,3 +114,25 @@ export async function getSidebarSections() {
         throw error;
     }
 }
+
+// Function to get tools partnerships
+export async function getToolsPartnerships() {
+    try {
+        const toolsRef = collection(db, 'ToolsPartnerships');
+        const querySnapshot = await getDocs(toolsRef);
+
+        const tools = [];
+        querySnapshot.forEach((doc) => {
+            tools.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        // Sort by name alphabetically
+        return tools.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } catch (error) {
+        console.error('Error getting tools partnerships:', error);
+        throw error;
+    }
+}
