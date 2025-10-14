@@ -13,7 +13,7 @@ function createLoader() {
     loader.id = 'loader';
     loader.innerHTML = `
         <div class="loader-content">
-            <img src="assets/full_logo.svg" alt="Blip Academy" class="loader-logo">
+            <img src="assets/logo.svg" alt="Blip Academy" class="loader-logo">
             <div class="loader-dots">
                 <div class="dot"></div>
                 <div class="dot"></div>
