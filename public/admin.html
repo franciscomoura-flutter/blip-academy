@@ -1220,8 +1220,7 @@
                         const lng = value?.longitude || 0;
                         return `<div class="grid grid-cols-2 gap-2"><input type="number" step="any" placeholder="Latitude" value="${lat}" onchange="window.cmsApp.updateGeopoint('${key}', 'latitude', parseFloat(this.value) || 0)" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"><input type="number" step="any" placeholder="Longitude" value="${lng}" onchange="window.cmsApp.updateGeopoint('${key}', 'longitude', parseFloat(this.value) || 0)" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></div>`;
                     case 'array':
-                        const arrayValue = value !== null ? JSON.stringify(value, null, 2) : '';
-                        return `<textarea id="field-${key}" rows="3" placeholder="Enter JSON array or leave empty for null" onchange="window.cmsApp.updateFieldFromJSON('${key}', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">${arrayValue}</textarea>`;
+                        return this.renderArrayEditor(key, value);
                     case 'map':
                         const mapValue = value !== null ? JSON.stringify(value, null, 2) : '';
                         return `<textarea id="field-${key}" rows="4" placeholder="Enter JSON object or leave empty for null" onchange="window.cmsApp.updateFieldFromJSON('${key}', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">${mapValue}</textarea>`;
@@ -1231,6 +1230,212 @@
                         return `<span class="text-gray-500 py-2">null</span>`;
                     default:
                         return `<input type="text" id="field-${key}" value="${value !== null && value !== undefined ? value : ''}" onchange="window.cmsApp.updateField('${key}', this.value === '' ? null : this.value)" placeholder="Leave empty for null" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">`;
+                }
+            }
+
+            renderArrayEditor(key, value) {
+                const arrayValue = Array.isArray(value) ? value : [];
+                const arrayId = `array-${key}`;
+
+                return `
+                    <div class="space-y-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Array Items</span>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="window.cmsApp.addArrayItem('${key}')" 
+                                        class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add Item
+                                </button>
+                                <button type="button" onclick="window.cmsApp.toggleArrayMode('${key}')" 
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                                    <i class="fas fa-code mr-1"></i>JSON Mode
+                                </button>
+                            </div>
+                        </div>
+                        <div id="${arrayId}-items" class="space-y-2">
+                            ${arrayValue.map((item, index) => this.renderArrayItem(key, item, index)).join('')}
+                        </div>
+                        ${arrayValue.length === 0 ? `
+                            <div class="text-center py-4 text-gray-500 text-sm">
+                                No items yet. Click "Add Item" to get started.
+                            </div>
+                        ` : ''}
+                        <div id="${arrayId}-json" style="display: none;">
+                            <textarea rows="6" placeholder="Enter JSON array" 
+                                      onchange="window.cmsApp.updateArrayFromJSON('${key}', this.value)"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm">${JSON.stringify(arrayValue, null, 2)}</textarea>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderArrayItem(fieldKey, item, index) {
+                const itemType = this.detectArrayItemType(item);
+                const itemId = `${fieldKey}-item-${index}`;
+
+                return `
+                    <div class="flex items-center space-x-2 bg-white p-3 rounded border">
+                        <div class="flex-shrink-0 w-8 text-sm text-gray-500 text-center">${index + 1}</div>
+                        <div class="flex-shrink-0">
+                            <select onchange="window.cmsApp.changeArrayItemType('${fieldKey}', ${index}, this.value)"
+                                    class="text-xs text-gray-600 border border-gray-200 rounded px-1 py-1 bg-gray-50">
+                                <option value="string" ${itemType === 'string' ? 'selected' : ''}>string</option>
+                                <option value="number" ${itemType === 'number' ? 'selected' : ''}>number</option>
+                                <option value="boolean" ${itemType === 'boolean' ? 'selected' : ''}>boolean</option>
+                                <option value="object" ${itemType === 'object' ? 'selected' : ''}>object</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            ${this.renderArrayItemInput(fieldKey, item, index, itemType)}
+                        </div>
+                        <div class="flex-shrink-0 flex space-x-1">
+                            <button type="button" onclick="window.cmsApp.moveArrayItem('${fieldKey}', ${index}, -1)" 
+                                    ${index === 0 ? 'disabled' : ''}
+                                    class="text-gray-400 hover:text-gray-600 disabled:opacity-30 p-1" title="Move up">
+                                <i class="fas fa-chevron-up text-xs"></i>
+                            </button>
+                            <button type="button" onclick="window.cmsApp.moveArrayItem('${fieldKey}', ${index}, 1)" 
+                                    class="text-gray-400 hover:text-gray-600 p-1" title="Move down">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            <button type="button" onclick="window.cmsApp.removeArrayItem('${fieldKey}', ${index})" 
+                                    class="text-red-500 hover:text-red-700 p-1" title="Remove">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderArrayItemInput(fieldKey, item, index, itemType) {
+                switch (itemType) {
+                    case 'boolean':
+                        return `<input type="checkbox" ${item ? 'checked' : ''} 
+                                       onchange="window.cmsApp.updateArrayItem('${fieldKey}', ${index}, this.checked)" 
+                                       class="rounded text-blue-600 focus:ring-blue-500">`;
+                    case 'number':
+                        return `<input type="number" step="any" value="${item || ''}" 
+                                       onchange="window.cmsApp.updateArrayItem('${fieldKey}', ${index}, parseFloat(this.value) || 0)" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">`;
+                    case 'object':
+                        return `<textarea rows="2" 
+                                          onchange="window.cmsApp.updateArrayItemFromJSON('${fieldKey}', ${index}, this.value)"
+                                          placeholder="Enter JSON object"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 font-mono text-sm">${JSON.stringify(item, null, 2)}</textarea>`;
+                    default: // string
+                        return `<input type="text" value="${item || ''}" 
+                                       onchange="window.cmsApp.updateArrayItem('${fieldKey}', ${index}, this.value)" 
+                                       placeholder="Enter text..."
+                                       class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">`;
+                }
+            }
+
+            detectArrayItemType(item) {
+                if (typeof item === 'boolean') return 'boolean';
+                if (typeof item === 'number') return 'number';
+                if (typeof item === 'object' && item !== null) return 'object';
+                return 'string';
+            }
+
+            addArrayItem(fieldKey) {
+                if (!Array.isArray(this.documentForm[fieldKey])) {
+                    this.documentForm[fieldKey] = [];
+                }
+                this.documentForm[fieldKey].push('');
+                this.renderDocumentEditor();
+            }
+
+            removeArrayItem(fieldKey, index) {
+                if (Array.isArray(this.documentForm[fieldKey])) {
+                    this.documentForm[fieldKey].splice(index, 1);
+                    this.renderDocumentEditor();
+                }
+            }
+
+            moveArrayItem(fieldKey, index, direction) {
+                const array = this.documentForm[fieldKey];
+                if (!Array.isArray(array)) return;
+
+                const newIndex = index + direction;
+                if (newIndex < 0 || newIndex >= array.length) return;
+
+                const item = array.splice(index, 1)[0];
+                array.splice(newIndex, 0, item);
+                this.renderDocumentEditor();
+            }
+
+            updateArrayItem(fieldKey, index, value) {
+                if (!Array.isArray(this.documentForm[fieldKey])) {
+                    this.documentForm[fieldKey] = [];
+                }
+                this.documentForm[fieldKey][index] = value;
+            }
+
+            updateArrayItemFromJSON(fieldKey, index, jsonString) {
+                try {
+                    const parsedValue = JSON.parse(jsonString);
+                    this.updateArrayItem(fieldKey, index, parsedValue);
+                } catch (error) {
+                    this.showStatus('Invalid JSON format', 'error');
+                }
+            }
+
+            changeArrayItemType(fieldKey, index, newType) {
+                const currentValue = this.documentForm[fieldKey][index];
+                let convertedValue;
+
+                switch (newType) {
+                    case 'boolean':
+                        convertedValue = Boolean(currentValue);
+                        break;
+                    case 'number':
+                        convertedValue = parseFloat(currentValue) || 0;
+                        break;
+                    case 'object':
+                        convertedValue = typeof currentValue === 'object' ? currentValue : {};
+                        break;
+                    default: // string
+                        convertedValue = String(currentValue || '');
+                }
+
+                this.updateArrayItem(fieldKey, index, convertedValue);
+                this.renderDocumentEditor();
+            }
+
+            updateArrayFromJSON(fieldKey, jsonString) {
+                try {
+                    if (jsonString.trim() === '') {
+                        this.documentForm[fieldKey] = [];
+                    } else {
+                        const parsedArray = JSON.parse(jsonString);
+                        if (Array.isArray(parsedArray)) {
+                            this.documentForm[fieldKey] = parsedArray;
+                        } else {
+                            this.showStatus('Value must be an array', 'error');
+                            return;
+                        }
+                    }
+                    this.renderDocumentEditor();
+                } catch (error) {
+                    this.showStatus('Invalid JSON format', 'error');
+                }
+            }
+
+            toggleArrayMode(fieldKey) {
+                const itemsDiv = document.getElementById(`array-${fieldKey}-items`);
+                const jsonDiv = document.getElementById(`array-${fieldKey}-json`);
+
+                if (itemsDiv.style.display === 'none') {
+                    // Switch to item mode
+                    itemsDiv.style.display = 'block';
+                    jsonDiv.style.display = 'none';
+                } else {
+                    // Switch to JSON mode
+                    itemsDiv.style.display = 'none';
+                    jsonDiv.style.display = 'block';
+                    // Update the textarea with current array value
+                    const textarea = jsonDiv.querySelector('textarea');
+                    textarea.value = JSON.stringify(this.documentForm[fieldKey] || [], null, 2);
                 }
             }
 
@@ -1304,7 +1509,13 @@
                     const cleanData = {};
 
                     Object.entries(this.documentForm).forEach(([key, value]) => {
-                        if (value instanceof Date) {
+                        if (Array.isArray(value)) {
+                            // Filter out empty strings and null values from arrays
+                            const filteredArray = value.filter(item =>
+                                item !== '' && item !== null && item !== undefined
+                            );
+                            cleanData[key] = filteredArray;
+                        } else if (value instanceof Date) {
                             cleanData[key] = Timestamp.fromDate(value);
                         } else if (value && typeof value === 'object' && value.latitude !== undefined) {
                             cleanData[key] = new GeoPoint(value.latitude, value.longitude);
