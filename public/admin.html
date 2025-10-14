@@ -2,11 +2,11 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blip Academy CMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
         [x-cloak] {
             display: none !important;
@@ -51,7 +51,14 @@
                     <span class="ml-3 text-sm text-gray-500">CMS</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="window.cmsApp.refreshView()"
+                    <div id="auth-user-chip" class="hidden items-center space-x-2">
+                        <span id="auth-user-email" class="text-sm text-gray-600"></span>
+                        <button id="signout-btn" onclick="window.authApp.signOut()"
+                            class="bg-gray-500 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Sign out
+                        </button>
+                    </div>
+                    <button onclick="window.cmsApp?.refreshView?.()"
                         class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-sync-alt mr-2"></i>Refresh
                     </button>
@@ -60,7 +67,41 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app">
+    <!-- Auth Gate -->
+    <div id="auth-view" class="max-w-md w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div id="auth-login-block">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Admin Sign in</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    Only the configured admin account can sign in.
+                </p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input id="login-email" type="email" placeholder="admin@yourdomain.com"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input id="login-password" type="password" placeholder="Enter password"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <button id="login-btn" onclick="window.authApp.signIn()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-right-to-bracket mr-2"></i>Sign in
+                    </button>
+                    <button id="reset-btn" onclick="window.authApp.resetPassword()"
+                        class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+                        <i class="fas fa-key mr-2"></i>Forgot password
+                    </button>
+                </div>
+            </div>
+            <div id="auth-status" class="mt-4 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- App -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="app" style="display: none;">
         <!-- Loading State -->
         <div id="loading-state" class="text-center py-12">
             <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
@@ -74,9 +115,7 @@
                     <h2 class="text-xl font-semibold text-gray-900">Collections</h2>
                     <span id="collections-count" class="text-sm text-gray-500"></span>
                 </div>
-                <div id="collections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Collections will be rendered here -->
-                </div>
+                <div id="collections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
             <!-- Add Collection -->
@@ -219,15 +258,11 @@
                         Drag fields to reorder them.
                     </p>
 
-                    <!-- Field Template List -->
                     <div class="mb-6">
                         <h4 class="text-lg font-medium text-gray-900 mb-4">Field Template</h4>
-                        <div id="template-fields-list" class="space-y-2 mb-4">
-                            <!-- Template fields will be rendered here -->
-                        </div>
+                        <div id="template-fields-list" class="space-y-2 mb-4"></div>
                     </div>
 
-                    <!-- Add New Template Field -->
                     <div class="border-t pt-6">
                         <h4 class="text-md font-medium text-gray-900 mb-3">Add New Field to Template</h4>
                         <div class="grid grid-cols-4 gap-3">
@@ -288,7 +323,14 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-        import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, deleteDoc, setDoc, Timestamp, GeoPoint, deleteField, writeBatch, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import {
+            getFirestore, collection, getDocs, doc, updateDoc, addDoc, deleteDoc, setDoc,
+            Timestamp, GeoPoint, deleteField, getDoc
+        } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import {
+            getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence,
+            signInWithEmailAndPassword, signOut, sendPasswordResetEmail
+        } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
         // ============================================
         // CONFIGURATION - Change for your project
@@ -307,11 +349,153 @@
             trackerCollection: 'collectionList',
             projectName: 'Blip Academy'
         };
+
         // ============================================
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
+        const els = {
+            authView: document.getElementById('auth-view'),
+            loginBlock: document.getElementById('auth-login-block'),
+            authStatus: document.getElementById('auth-status'),
+            appRoot: document.getElementById('app'),
+            userChip: document.getElementById('auth-user-chip'),
+            userEmail: document.getElementById('auth-user-email'),
+            projectName: document.getElementById('project-name'),
+        };
+
+        let cmsStarted = false;
+
+        function setStatus(text, type = 'info') {
+            const color = type === 'error' ? 'text-red-700 bg-red-50 border-red-200'
+                : type === 'success' ? 'text-green-700 bg-green-50 border-green-200'
+                    : 'text-gray-700 bg-gray-50 border-gray-200';
+            els.authStatus.className = `mt-4 text-sm px-3 py-2 rounded border ${color}`;
+            els.authStatus.textContent = text;
+        }
+
+        function showLogin() {
+            els.authView.style.display = 'block';
+            els.appRoot.style.display = 'none';
+            els.userChip.classList.add('hidden');
+        }
+
+        function showApp(user) {
+            els.authView.style.display = 'none';
+            els.appRoot.style.display = 'block';
+            els.userChip.classList.remove('hidden');
+            els.userEmail.textContent = user?.email || '';
+        }
+
+        async function ensurePersistence() {
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+            } catch (e) {
+                console.warn('Failed to set auth persistence:', e);
+            }
+        }
+
+        // Fixed function to check admin status
+        async function isAuthorizedUser(user) {
+            if (!user) return false;
+
+            try {
+                const adminDoc = await getDoc(doc(db, 'cmsConfig', 'admin'));
+                if (adminDoc.exists()) {
+                    return user.uid === adminDoc.data().adminUid;
+                }
+
+                setStatus('No admin config found. Create a document at cmsConfig/admin with field adminUid set to your user UID: ' + user.uid, 'error');
+                return false;
+            } catch (e) {
+                console.error('Error checking admin status:', e);
+                setStatus('Error checking admin permissions: ' + e.message, 'error');
+                return false;
+            }
+        }
+
+        async function startCMSIfNeeded() {
+            if (cmsStarted) return;
+            window.cmsApp = new UniversalCMS();
+            await window.cmsApp.init();
+            cmsStarted = true;
+        }
+
+        window.authApp = {
+            async signIn() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                setStatus('Signing in...');
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+                    // Check admin status after sign in
+                    const isAdmin = await isAuthorizedUser(userCredential.user);
+                    if (!isAdmin) {
+                        await signOut(auth);
+                        setStatus(`Not authorized as admin. Your UID: ${userCredential.user.uid}`, 'error');
+                        return;
+                    }
+
+                    setStatus('Signed in as admin.', 'success');
+                } catch (e) {
+                    setStatus(e.message || 'Failed to sign in.', 'error');
+                }
+            },
+
+            async resetPassword() {
+                const email = document.getElementById('login-email').value.trim();
+                if (!email) { setStatus('Enter the admin email to reset password.', 'error'); return; }
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    setStatus('Password reset email sent.', 'success');
+                } catch (e) {
+                    setStatus(e.message || 'Failed to send reset email.', 'error');
+                }
+            },
+
+            async signOut() {
+                try {
+                    await signOut(auth);
+                    setStatus('Signed out.', 'success');
+                    cmsStarted = false;
+                    showLogin();
+                } catch (e) {
+                    setStatus(e.message || 'Failed to sign out.', 'error');
+                }
+            }
+        };
+
+        (async function boot() {
+            els.projectName.textContent = CMS_CONFIG.projectName;
+            await ensurePersistence();
+
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    showLogin();
+                    return;
+                }
+
+                // Check admin status on each auth state change
+                const isAdmin = await isAuthorizedUser(user);
+                if (!isAdmin) {
+                    await signOut(auth);
+                    showLogin();
+                    return;
+                }
+
+                setStatus('');
+                showApp(user);
+                await startCMSIfNeeded();
+                await window.cmsApp.refreshView();
+            });
+        })();
+
+        // ============================================
+        // CMS implementation (unchanged features)
+        // ============================================
         class UniversalCMS {
             constructor() {
                 this.collections = [];
@@ -369,7 +553,7 @@
 
                     this.renderCollections();
                 } catch (error) {
-                    if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+                    if (error.code === 'permission-denied' || (error.message || '').includes('Missing or insufficient permissions')) {
                         await this.initializeTrackerCollection();
                     } else {
                         this.showStatus('Error loading collections: ' + error.message, 'error');
@@ -499,10 +683,7 @@
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
                         if (!data._placeholder) {
-                            this.documents.push({
-                                id: docSnap.id,
-                                data: data
-                            });
+                            this.documents.push({ id: docSnap.id, data: data });
                             Object.keys(data).forEach(key => allFields.add(key));
                         }
                     });
@@ -625,26 +806,11 @@
                 const displayName = document.getElementById('template-field-display').value.trim();
                 const type = document.getElementById('template-field-type').value;
 
-                if (!name) {
-                    this.showStatus('Please enter a field name', 'error');
-                    return;
-                }
+                if (!name) { this.showStatus('Please enter a field name', 'error'); return; }
+                if (!displayName) { this.showStatus('Please enter a display name', 'error'); return; }
+                if (this.templateFields.find(f => f.name === name)) { this.showStatus('Field already exists in template', 'error'); return; }
 
-                if (!displayName) {
-                    this.showStatus('Please enter a display name', 'error');
-                    return;
-                }
-
-                if (this.templateFields.find(f => f.name === name)) {
-                    this.showStatus('Field already exists in template', 'error');
-                    return;
-                }
-
-                this.templateFields.push({
-                    name: name,
-                    displayName: displayName,
-                    type: type
-                });
+                this.templateFields.push({ name, displayName, type });
 
                 document.getElementById('template-field-name').value = '';
                 document.getElementById('template-field-display').value = '';
@@ -686,33 +852,24 @@
             }
 
             getSortIcon(fieldName) {
-                if (this.currentSortField !== fieldName) {
-                    return '<i class="fas fa-sort text-gray-400 ml-2"></i>';
-                }
+                if (this.currentSortField !== fieldName) return '<i class="fas fa-sort text-gray-400 ml-2"></i>';
                 return this.currentSortOrder === 'asc'
                     ? '<i class="fas fa-sort-up text-blue-600 ml-2"></i>'
                     : '<i class="fas fa-sort-down text-blue-600 ml-2"></i>';
             }
 
             getTableDisplayFields() {
-                // If template exists, use template order for first 4 fields
                 if (this.collectionTemplate && this.collectionTemplate.length > 0) {
                     const templateFieldNames = this.collectionTemplate.map(f => f.name);
-                    // Get template fields that actually exist in documents
                     const existingTemplateFields = templateFieldNames.filter(name => this.availableFields.includes(name));
-
-                    // If we have less than 4 template fields, fill with remaining fields
                     if (existingTemplateFields.length < 4) {
                         const remainingFields = this.availableFields
                             .filter(f => !templateFieldNames.includes(f))
                             .slice(0, 4 - existingTemplateFields.length);
                         return [...existingTemplateFields, ...remainingFields];
                     }
-
                     return existingTemplateFields.slice(0, 4);
                 }
-
-                // No template, use first 4 available fields
                 return this.availableFields.slice(0, 4);
             }
 
@@ -774,17 +931,12 @@
 
             toggleSort(fieldName) {
                 if (this.currentSortField === fieldName) {
-                    if (this.currentSortOrder === 'asc') {
-                        this.currentSortOrder = 'desc';
-                    } else {
-                        this.currentSortField = null;
-                        this.currentSortOrder = null;
-                    }
+                    if (this.currentSortOrder === 'asc') this.currentSortOrder = 'desc';
+                    else { this.currentSortField = null; this.currentSortOrder = null; }
                 } else {
                     this.currentSortField = fieldName;
                     this.currentSortOrder = 'asc';
                 }
-
                 this.sortDocuments();
                 this.renderTable();
             }
@@ -861,7 +1013,6 @@
                 this.documentForm = {};
                 this.fieldTypes = {};
 
-                // Initialize with template fields if available
                 if (this.collectionTemplate && this.collectionTemplate.length > 0) {
                     this.collectionTemplate.forEach(field => {
                         this.documentForm[field.name] = this.getDefaultValueForType(field.type);
@@ -897,7 +1048,6 @@
 
                 const form = document.getElementById('document-form');
 
-                // Get field order from template or alphabetically
                 let sortedFields;
                 if (this.collectionTemplate && this.collectionTemplate.length > 0) {
                     const templateFieldNames = this.collectionTemplate.map(f => f.name);
@@ -1053,15 +1203,8 @@
                 const fieldName = document.getElementById('new-field-name').value.trim();
                 const fieldType = document.getElementById('new-field-type').value;
 
-                if (!fieldName) {
-                    this.showStatus('Please enter a field name', 'error');
-                    return;
-                }
-
-                if (this.documentForm.hasOwnProperty(fieldName)) {
-                    this.showStatus('Field already exists', 'error');
-                    return;
-                }
+                if (!fieldName) { this.showStatus('Please enter a field name', 'error'); return; }
+                if (this.documentForm.hasOwnProperty(fieldName)) { this.showStatus('Field already exists', 'error'); return; }
 
                 let defaultValue;
                 switch (fieldType) {
@@ -1106,9 +1249,7 @@
                     if (this.isNewDocument) {
                         const newDocData = {};
                         Object.entries(cleanData).forEach(([key, value]) => {
-                            if (value !== deleteField()) {
-                                newDocData[key] = value;
-                            }
+                            if (value !== deleteField()) newDocData[key] = value;
                         });
 
                         await addDoc(collection(db, this.currentCollection.name), newDocData);
@@ -1233,19 +1374,13 @@
 
                 statusDiv.style.display = 'block';
 
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
+                setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
             }
 
             hideStatus() {
                 document.getElementById('status-message').style.display = 'none';
             }
         }
-
-        // Initialize the CMS
-        window.cmsApp = new UniversalCMS();
-        window.cmsApp.init();
     </script>
 </body>
 

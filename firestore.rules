@@ -1,9 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow full access for admin operations
+    function isAdmin() {
+      return get(/databases/$(database)/documents/cmsConfig/admin).data.adminUid == request.auth.uid;
+    }
+    // Allow read for public content if you need; otherwise restrict as admin-only
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
   }
 }
