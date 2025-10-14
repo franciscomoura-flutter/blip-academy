@@ -85,6 +85,7 @@ body {
     justify-content: flex-start;
     padding: 25px 15% 25px 25px;
     gap: 30px;
+    overflow: hidden;
 }
 
 .tools-card-section:last-child {
@@ -118,6 +119,11 @@ body {
     font-style: normal;
     font-weight: 300;
     line-height: 160%;
+    display: -webkit-box;
+    -webkit-line-clamp: 10;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tools-card-action {
