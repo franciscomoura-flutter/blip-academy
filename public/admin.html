@@ -1043,8 +1043,24 @@
                 document.getElementById('collection-view').style.display = 'none';
                 document.getElementById('document-editor').style.display = 'block';
 
-                document.getElementById('editor-title').textContent =
-                    this.isNewDocument ? 'New Document' : 'Edit Document';
+                const editorTitle = document.getElementById('editor-title');
+                if (this.isNewDocument) {
+                    editorTitle.innerHTML = 'New Document';
+                } else {
+                    editorTitle.innerHTML = `
+                        Edit Document
+                        <div class="flex items-center mt-2 space-x-2">
+                            <span class="text-sm text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">
+                                ID: ${this.currentDocument.id}
+                            </span>
+                            <button onclick="window.cmsApp.copyDocumentId()" 
+                                    class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition-colors"
+                                    title="Copy document ID">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    `;
+                }
 
                 const form = document.getElementById('document-form');
 
@@ -1099,6 +1115,23 @@
 
                 document.getElementById('new-field-name').value = '';
                 document.getElementById('new-field-type').value = 'string';
+            }
+
+            copyDocumentId() {
+                if (this.currentDocument && this.currentDocument.id) {
+                    navigator.clipboard.writeText(this.currentDocument.id).then(() => {
+                        this.showStatus('Document ID copied to clipboard!', 'success');
+                    }).catch(() => {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = this.currentDocument.id;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        this.showStatus('Document ID copied to clipboard!', 'success');
+                    });
+                }
             }
 
             detectFirebaseType(value) {

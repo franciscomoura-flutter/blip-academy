@@ -1,0 +1,43 @@
+body {
+    background: radial-gradient(62.74% 59.4% at 81.88% -20%, rgb(var(--primary)) 0%, rgb(var(--black)) 100%);
+}
+
+.hero-section {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    padding: 0 5%;
+}
+
+.hero-section div {
+    width: fit-content;
+    padding: 20px;
+}
+
+.hero-page-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(var(--gray));
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid rgb(var(--gray));
+    border-radius: 7px 0 0 7px;
+}
+
+.hero-page-name {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+    color: rgb(var(--white));
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    border: 1px solid rgb(var(--gray));
+    border-left: none;
+    border-radius: 0 7px 7px 0;
+}
