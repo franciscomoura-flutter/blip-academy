@@ -2290,50 +2290,55 @@
             }
 
             parseCSV(csvText) {
-                // Simple CSV parser - handles basic CSV format
-                const lines = csvText.split('\n').filter(line => line.trim());
+                console.log('Raw CSV length:', csvText.length);
+
+                // Split into lines first
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+
                 if (lines.length < 2) {
                     throw new Error('CSV file must have at least a header row and one data row');
                 }
 
-                // Parse headers
-                this.csvHeaders = this.parseCSVLine(lines[0]);
+                console.log('Lines found:', lines.length);
 
-                // Parse data rows
-                this.csvRows = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const row = this.parseCSVLine(lines[i]);
-                    if (row.length > 0 && row.some(cell => cell.trim())) { // Skip empty rows
-                        this.csvRows.push(row);
-                    }
-                }
+                // Parse each line
+                const allRows = lines.map(line => this.parseCSVLine(line));
+
+                // First row = headers
+                this.csvHeaders = allRows[0];
+
+                // Rest = data
+                this.csvRows = allRows.slice(1);
+
+                console.log('Headers:', this.csvHeaders);
+                console.log('Data rows:', this.csvRows.length);
+                console.log('Sample data:', this.csvRows.slice(0, 3));
             }
 
             parseCSVLine(line) {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
+                const fields = [];
+                let currentField = '';
+                let insideQuotes = false;
 
                 for (let i = 0; i < line.length; i++) {
                     const char = line[i];
 
                     if (char === '"') {
-                        if (inQuotes && line[i + 1] === '"') {
-                            current += '"';
-                            i++; // Skip next quote
-                        } else {
-                            inQuotes = !inQuotes;
-                        }
-                    } else if (char === ',' && !inQuotes) {
-                        result.push(current.trim());
-                        current = '';
+                        insideQuotes = !insideQuotes;
+                    } else if (char === ',' && !insideQuotes) {
+                        // End of field - add it and start new one
+                        fields.push(currentField);
+                        currentField = '';
                     } else {
-                        current += char;
+                        // Regular character - add to current field
+                        currentField += char;
                     }
                 }
 
-                result.push(current.trim());
-                return result;
+                // Don't forget the last field
+                fields.push(currentField);
+
+                return fields;
             }
 
             formatFileSize(bytes) {
@@ -2375,28 +2380,38 @@
 
             renderCSVPreview() {
                 const previewContainer = document.getElementById('csv-preview-content');
-                const previewRows = this.csvRows.slice(0, 3); // Show first 3 rows
+                const previewRows = this.csvRows.slice(0, 3); // Show first 3 DATA rows (not including headers)
 
                 let html = '<table class="min-w-full text-sm">';
 
-                // Headers
-                html += '<thead class="bg-gray-100"><tr>';
+                // Headers (clearly marked as headers)
+                html += '<thead class="bg-blue-100"><tr>';
                 this.csvHeaders.forEach(header => {
-                    html += `<th class="px-3 py-2 text-left font-medium text-gray-700 border">${header}</th>`;
+                    html += `<th class="px-3 py-2 text-left font-medium text-blue-700 border">
+                                <i class="fas fa-tag text-xs mr-1"></i>${header}
+                            </th>`;
                 });
                 html += '</tr></thead>';
 
-                // Data rows
+                // Data rows (clearly marked as data)
                 html += '<tbody>';
                 previewRows.forEach((row, rowIndex) => {
                     html += '<tr class="hover:bg-gray-50">';
                     this.csvHeaders.forEach((header, colIndex) => {
                         const cellValue = row[colIndex] || '';
-                        html += `<td class="px-3 py-2 border text-gray-600">${cellValue}</td>`;
+                        const displayValue = cellValue.length > 30 ? cellValue.substring(0, 30) + '...' : cellValue;
+                        html += `<td class="px-3 py-2 border text-gray-600" title="${cellValue}">${displayValue}</td>`;
                     });
                     html += '</tr>';
                 });
                 html += '</tbody></table>';
+
+                // Add info about what we're showing
+                html += `<div class="mt-2 text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Showing headers + first ${Math.min(3, this.csvRows.length)} data rows 
+                            (${this.csvRows.length} total data rows found)
+                        </div>`;
 
                 previewContainer.innerHTML = html;
             }
