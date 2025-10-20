@@ -110,16 +110,8 @@
 
         <!-- Collections View -->
         <div id="collections-view" style="display: none;">
-            <div class="mb-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-gray-900">Collections</h2>
-                    <span id="collections-count" class="text-sm text-gray-500"></span>
-                </div>
-                <div id="collections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-            </div>
-
             <!-- Add Collection -->
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Collection</h3>
                 <div class="flex items-center space-x-3">
                     <input type="text" id="new-collection-name" placeholder="Collection name"
@@ -131,6 +123,15 @@
                     </button>
                 </div>
             </div>
+
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Collections</h2>
+                    <span id="collections-count" class="text-sm text-gray-500"></span>
+                </div>
+                <div id="collections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
         </div>
 
         <!-- Collection View -->
@@ -539,13 +540,25 @@
 
                             const count = collectionSnapshot.docs.filter(d => !d.data()._placeholder).length;
 
+                            // Find the most recent lastModified timestamp from all documents
+                            let lastModified = data.createdAt; // fallback to created date
+                            collectionSnapshot.docs.forEach(doc => {
+                                const docData = doc.data();
+                                if (docData.lastModified && (!lastModified || docData.lastModified > lastModified)) {
+                                    lastModified = docData.lastModified;
+                                }
+                            });
+
                             this.collections.push({
                                 id: docSnap.id,
                                 name: data.name,
                                 count: count,
                                 totalDocs: collectionSnapshot.docs.length,
                                 createdAt: data.createdAt,
-                                template: data.template || null
+                                lastModified: lastModified,
+                                template: data.template || null,
+                                sortField: data.sortField || null,
+                                sortOrder: data.sortOrder || null
                             });
                         } catch (error) {
                             // Collection doesn't exist or access error - mark for removal
@@ -562,6 +575,9 @@
                             console.error(`Error cleaning up tracker entry ${collectionId}:`, error);
                         }
                     }
+
+                    // Sort collections alphabetically by name
+                    this.collections.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
                     this.renderCollections();
                 } catch (error) {
@@ -610,29 +626,50 @@
                     return;
                 }
 
-                grid.innerHTML = this.collections.map(coll => `
-                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border"
-                         onclick="window.cmsApp.selectCollection('${coll.id}')">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-database text-blue-500 text-2xl mr-3"></i>
-                                <h3 class="text-lg font-medium text-gray-900">${coll.name}</h3>
+                grid.innerHTML = this.collections.map(coll => {
+                    const lastModifiedDate = coll.lastModified ? new Date(coll.lastModified) : null;
+                    const createdDate = coll.createdAt ? new Date(coll.createdAt) : null;
+
+                    return `
+                        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border"
+                             onclick="window.cmsApp.selectCollection('${coll.id}')">
+                            <!-- Title and Count -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-database text-blue-500 text-2xl mr-3"></i>
+                                    <h3 class="text-lg font-medium text-gray-900">${coll.name}</h3>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    ${coll.template ? '<i class="fas fa-check-circle text-green-500" title="Template configured"></i>' : ''}
+                                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                                        ${coll.count}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                ${coll.template ? '<i class="fas fa-check-circle text-green-500" title="Template configured"></i>' : ''}
-                                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                                    ${coll.count}
-                                </span>
+                            
+                            <!-- Dates in one line -->
+                            <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                ${createdDate ? `
+                                    <div class="flex items-center">
+                                        <span class="text-gray-400 mr-1">Created</span>
+                                        <span class="text-gray-600">${createdDate.toLocaleDateString()}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                                ${lastModifiedDate ? `
+                                    <div class="flex items-center">
+                                        <span class="text-gray-400 mr-1">Last edited</span>
+                                        <span class="text-gray-600">${lastModifiedDate.toLocaleDateString()}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                            </div>
+                            
+                            <!-- CTA -->
+                            <div class="flex justify-start">
+                                <span class="text-blue-600 text-sm font-medium">View Collection →</span>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-blue-600 text-sm font-medium">View Collection →</span>
-                            <span class="text-xs text-gray-400">
-                                ${coll.createdAt ? new Date(coll.createdAt).toLocaleDateString() : ''}
-                            </span>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             async createCollection() {
@@ -681,8 +718,10 @@
 
                 this.currentCollection = collInfo;
                 this.collectionTemplate = collInfo.template;
-                this.currentSortField = null;
-                this.currentSortOrder = null;
+
+                // Load saved sort state from collection
+                this.currentSortField = collInfo.sortField || null;
+                this.currentSortOrder = collInfo.sortOrder || null;
 
                 document.getElementById('collections-view').style.display = 'none';
                 document.getElementById('loading-state').style.display = 'block';
@@ -714,6 +753,12 @@
 
                     this.availableFields = Array.from(allFields).sort();
                     this.filteredDocuments = [...this.documents];
+
+                    // Apply saved sorting if any
+                    if (this.currentSortField && this.currentSortOrder) {
+                        this.sortDocuments();
+                    }
+
                     this.renderCollection();
                 } catch (error) {
                     this.showStatus('Error loading documents: ' + error.message, 'error');
@@ -1031,16 +1076,51 @@
                 return templateField ? templateField.displayName : fieldName;
             }
 
-            toggleSort(fieldName) {
+            async toggleSort(fieldName) {
                 if (this.currentSortField === fieldName) {
-                    if (this.currentSortOrder === 'asc') this.currentSortOrder = 'desc';
-                    else { this.currentSortField = null; this.currentSortOrder = null; }
+                    if (this.currentSortOrder === 'asc') {
+                        this.currentSortOrder = 'desc';
+                    } else {
+                        // Clear sorting
+                        this.currentSortField = null;
+                        this.currentSortOrder = null;
+                    }
                 } else {
                     this.currentSortField = fieldName;
                     this.currentSortOrder = 'asc';
                 }
+
+                // Save sort state to collection tracker
+                await this.saveSortState();
+
                 this.sortDocuments();
                 this.renderTable();
+            }
+
+            async saveSortState() {
+                try {
+                    const updateData = {
+                        sortField: this.currentSortField,
+                        sortOrder: this.currentSortOrder
+                    };
+
+                    await updateDoc(doc(db, CMS_CONFIG.trackerCollection, this.currentCollection.id), updateData);
+
+                    // Update local collection object
+                    this.currentCollection.sortField = this.currentSortField;
+                    this.currentCollection.sortOrder = this.currentSortOrder;
+
+                    // Also update in collections array
+                    const collIndex = this.collections.findIndex(c => c.id === this.currentCollection.id);
+                    if (collIndex !== -1) {
+                        this.collections[collIndex].sortField = this.currentSortField;
+                        this.collections[collIndex].sortOrder = this.currentSortOrder;
+                    }
+
+                } catch (error) {
+                    console.error('Error saving sort state:', error);
+                    // Don't show error to user as it's not critical
+                }
             }
 
             sortDocuments() {
@@ -1643,6 +1723,9 @@
                         }
                     });
 
+                    // Add lastModified timestamp
+                    cleanData.lastModified = new Date().toISOString();
+
                     this.fieldsToDelete.forEach(fieldName => {
                         cleanData[fieldName] = deleteField();
                     });
@@ -1769,9 +1852,23 @@
             }
 
             async refreshView() {
+                // Clear current state
+                this.documents = [];
+                this.filteredDocuments = [];
+                this.availableFields = [];
+
+                // Show loading state
                 if (this.currentCollection) {
+                    document.getElementById('collection-view').style.display = 'none';
+                    document.getElementById('loading-state').style.display = 'block';
+
+                    // Reload the current collection completely
                     await this.selectCollection(this.currentCollection.id);
                 } else {
+                    document.getElementById('collections-view').style.display = 'none';
+                    document.getElementById('loading-state').style.display = 'block';
+
+                    // Reload collections completely
                     await this.loadCollections();
                 }
             }
