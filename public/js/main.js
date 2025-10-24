@@ -1,13 +1,5 @@
 import { createSidebar } from './sidebar.js';
 
-function isInIframe() {
-    const bypassDomains = ['localhost', '127.0.0.1'];
-    if (bypassDomains.some(domain => window.location.hostname.includes(domain))) {
-        return true;
-    }
-    return window.self !== window.top;
-}
-
 function createLoader() {
     const loader = document.createElement('div');
     loader.id = 'loader';
@@ -174,11 +166,6 @@ function handleScroll() {
 }
 
 async function initCommon() {
-    if (!isInIframe()) {
-        document.body.style.display = 'none';
-        return;
-    }
-
     // Show loader immediately
     createLoader();
 
