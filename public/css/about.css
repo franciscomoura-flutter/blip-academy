@@ -215,7 +215,7 @@ body {
 .cta-card-section {
     display: flex;
     flex-direction: column;
-    padding: 25px 15% 25px 25px;
+    padding: 25px;
     border-bottom: 1px solid rgb(var(--gray));
     gap: 20px;
 }
